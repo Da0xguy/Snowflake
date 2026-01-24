@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Snowflake, Footprints, Mountain, Sparkles } from 'lucide-react';
+import { Snowflake, Footprints, Mountain, Sparkles, Pickaxe, Telescope, Calendars, BadgeCheck } from 'lucide-react';
 
 const YetiStampDApp = () => {
   const [wallet, setWallet] = useState(null);
@@ -32,9 +32,9 @@ const YetiStampDApp = () => {
   };
 
   const stampTypes = [
-    { name: 'Hackathon', icon: '', color: 'from-blue-500 to-cyan-500' },
-    { name: 'Builder', icon: '', color: 'from-purple-500 to-pink-500' },
-    { name: 'Explorer', icon: '', color: 'from-green-500 to-emerald-500' }
+    { name: 'Hackathon', icon: <Calendars className="text-white" size={36} />, color: 'from-blue-500 to-cyan-500' },
+    { name: 'Builder', icon: <Pickaxe className="text-white" size={36} />, color: 'from-purple-500 to-pink-500' },
+    { name: 'Explorer', icon: <Telescope className="text-white" size={36} />, color: 'from-green-500 to-emerald-500' }
   ];
 
   return (
@@ -135,7 +135,7 @@ const YetiStampDApp = () => {
                             : 'border-white/20 bg-white/5 hover:bg-white/10'
                         }`}
                       >
-                        <div className="text-4xl mb-3">{type.icon}</div>
+                        <div className="flex justify-center text-4xl mb-3">{type.icon}</div>
                         <div className="text-white font-bold text-lg">{type.name}</div>
                       </button>
                     ))}
@@ -152,7 +152,7 @@ const YetiStampDApp = () => {
                         Stamping Your Passport...
                       </span>
                     ) : (
-                      '🦶 Stamp My Yeti Passport'
+                      'Stamp My Yeti Passport'
                     )}
                   </button>
                 </div>
@@ -162,7 +162,7 @@ const YetiStampDApp = () => {
                   <div className="relative">
                     <div className={`w-40 h-40 mx-auto bg-gradient-to-br ${stampTypes.find(t => t.name === stamp.type)?.color} rounded-full flex items-center justify-center animate-bounce-slow relative`}>
                       <div className="text-6xl">
-                        {stampTypes.find(t => t.name === stamp.type)?.icon}
+                        <BadgeCheck className="text-white" size={76} />
                       </div>
                       <div className="absolute -top-2 -right-2">
                         <Sparkles className="text-yellow-300 animate-pulse" size={32} />
@@ -172,7 +172,7 @@ const YetiStampDApp = () => {
 
                   <div>
                     <h2 className="text-3xl font-bold text-white mb-2">
-                      Stamp Claimed! 🎉
+                      Stamp Claimed! 
                     </h2>
                     <p className="text-blue-200 text-lg">
                       You're officially part of the Yeti ecosystem
