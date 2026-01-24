@@ -32,9 +32,9 @@ const YetiStampDApp = () => {
   };
 
   const stampTypes = [
-    { name: 'Hackathon', icon: '🏔️', color: 'from-blue-500 to-cyan-500' },
-    { name: 'Builder', icon: '🛠️', color: 'from-purple-500 to-pink-500' },
-    { name: 'Explorer', icon: '🧭', color: 'from-green-500 to-emerald-500' }
+    { name: 'Hackathon', icon: '', color: 'from-blue-500 to-cyan-500' },
+    { name: 'Builder', icon: '', color: 'from-purple-500 to-pink-500' },
+    { name: 'Explorer', icon: '', color: 'from-green-500 to-emerald-500' }
   ];
 
   return (
