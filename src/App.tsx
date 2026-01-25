@@ -240,7 +240,7 @@ export default function App() {
             Choose the path that best represents how you interact on-chain.
           </p>
 
-          <div className="grid grid-cols-3 gap-4 mt-6">
+          <div className="grid gap-4 mt-6">
             {(["Explorer", "Builder", "Staker"] as Identity[]).map((type) => (
               <button
                 key={type}
@@ -248,26 +248,34 @@ export default function App() {
                 className="p-6 rounded-2xl bg-white/5 border border-white/20 hover:bg-white/10 hover:scale-105 transition"
               >
                 <div className="text-xl font-bold">{type}</div>
-                <div className="text-xs text-blue-300 mt-2 flex items-center justify-center gap-1">
-                {type === "Explorer" && (
-                  <>
-                    <Compass size={30} />
-                    Transactions & usage
-                  </>
-                )}
-                {type === "Builder" && (
-                  <>
-                    <Pickaxe size={30} />
-                    Contracts & deployments
-                  </>
-                )}
-                {type === "Staker" && (
-                  <>
-                    <PieChart size={30} />
-                    Liquidity & staking
-                  </>
-                )}
+                {/* Parent Wrapper (Put this around your card list) */}
+            <div className="flex flex-col items-center justify-center w-full gap-6 p-4">
+              {/* The Card Content */}
+              <div className="flex flex-col items-center text-center">
+                {/* ... Your Image and Name here ... */}
+
+                <div className="text-xs text-blue-300 mt-2 flex flex-row items-center justify-center gap-2 w-full">
+                  {type === "Explorer" && (
+                    <>
+                      <Compass size={30} className="shrink-0" />
+                      <span>Transactions & usage</span>
+                    </>
+                  )}
+                  {type === "Builder" && (
+                    <>
+                      <Pickaxe size={30} className="shrink-0" />
+                      <span>Contracts & deployments</span>
+                    </>
+                  )}
+                  {type === "Staker" && (
+                    <>
+                      <PieChart size={30} className="shrink-0" />
+                      <span>Liquidity & staking</span>
+                    </>
+                  )}
+                </div>
               </div>
+            </div>
               </button>
             ))}
           </div>
