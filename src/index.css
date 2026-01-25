@@ -27,3 +27,33 @@
 .btn {
   @apply px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700;
 }
+
+@keyframes cardIn {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-cardIn {
+  animation: cardIn 0.6s ease-out forwards;
+}
+
+@keyframes stepIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-stepIn {
+  animation: stepIn 0.4s ease-out forwards;
+}

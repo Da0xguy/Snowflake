@@ -7,7 +7,11 @@ import {
   Sparkles,
   Share2,
   Download,
+  Compass,
+   Pickaxe, 
+   PieChart
 } from "lucide-react";
+import HeroPic from "./assets/heropic.png"
 
 type Identity = "Explorer" | "Builder" | "Staker";
 type Step =
@@ -90,6 +94,49 @@ export default function App() {
     }
   }
 
+  function AnimatedProgress({
+  text,
+  done,
+  active,
+  show,
+  delay = 0,
+}: {
+  text: string;
+  done?: boolean;
+  active?: boolean;
+  show: boolean;
+  delay?: number;
+}) {
+  if (!show) return null;
+
+  return (
+    <div
+      className="flex items-center gap-3 text-sm opacity-0 animate-stepIn"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      {done ? (
+        <CheckCircle className="text-green-400" size={18} />
+      ) : active ? (
+        <Loader2 className="animate-spin text-cyan-400" size={18} />
+      ) : (
+        <div className="w-4 h-4 rounded-full border border-white/30" />
+      )}
+
+      <span
+        className={
+          done
+            ? "text-green-300"
+            : active
+            ? "text-cyan-300"
+            : "text-blue-200"
+        }
+      >
+        {text}
+      </span>
+    </div>
+  );
+}
+
   function downloadNFT() {
     const link = document.createElement("a");
     link.href = `/nft/${identity?.toLowerCase()}_level_${level}.png`;
@@ -119,7 +166,7 @@ export default function App() {
       <nav className="flex justify-between items-center px-8 py-6 relative z-10">
         <div className="flex items-center gap-2 text-xl font-bold">
           <Snowflake className="text-cyan-300" />
-          Yeti Identity
+          SnowFlake
         </div>
 
         {!wallet && (
@@ -135,7 +182,7 @@ export default function App() {
 
       {/* ---------------- LANDING ---------------- */}
       {!wallet && (
-        <section className="max-w-6xl mx-auto px-8 py-24 space-y-24 relative z-10">
+        <section className="max-w-6xl mx-auto px-8 py-24 space-y-24 min-h-screen relative z-10">
           {/* HERO */}
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div className="space-y-6">
@@ -150,7 +197,7 @@ export default function App() {
             </div>
 
             <img
-              src="/nft/explorer_level_1.png"
+              src={HeroPic}
               className="w-72 mx-auto rounded-3xl shadow-2xl animate-float"
             />
           </div>
@@ -174,7 +221,7 @@ export default function App() {
 
           {/* ABOUT */}
           <div>
-            <h2 className="text-3xl font-bold mb-6">Why Yeti Identity?</h2>
+            <h2 className="text-3xl font-bold mb-6">Why SnowFlake?</h2>
             <p className="text-blue-200 max-w-3xl">
               Wallets don’t tell stories. Activity does. Yeti Identity turns
               transactions, DeFi usage, and protocol interaction into a living
@@ -201,11 +248,26 @@ export default function App() {
                 className="p-6 rounded-2xl bg-white/5 border border-white/20 hover:bg-white/10 hover:scale-105 transition"
               >
                 <div className="text-xl font-bold">{type}</div>
-                <div className="text-xs text-blue-300 mt-2">
-                  {type === "Explorer" && "Transactions & usage"}
-                  {type === "Builder" && "Contracts & deployments"}
-                  {type === "Staker" && "Liquidity & staking"}
-                </div>
+                <div className="text-xs text-blue-300 mt-2 flex items-center justify-center gap-1">
+                {type === "Explorer" && (
+                  <>
+                    <Compass size={30} />
+                    Transactions & usage
+                  </>
+                )}
+                {type === "Builder" && (
+                  <>
+                    <Pickaxe size={30} />
+                    Contracts & deployments
+                  </>
+                )}
+                {type === "Staker" && (
+                  <>
+                    <PieChart size={30} />
+                    Liquidity & staking
+                  </>
+                )}
+              </div>
               </button>
             ))}
           </div>
@@ -214,29 +276,57 @@ export default function App() {
 
       {/* ---------------- STAMPING PROCESS ---------------- */}
       {identity && currentStep && currentStep !== "done" && (
-        <section className="max-w-xl mx-auto px-8 py-24 text-center space-y-6 relative z-10">
-          <Loader2 className="mx-auto animate-spin text-cyan-400" size={40} />
-          <h3 className="text-2xl font-bold">Stamping Identity</h3>
+  <section className="max-w-xl mx-auto px-4 sm:px-8 py-24 relative z-10">
+    <div className="relative rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl p-8 sm:p-10 space-y-8 animate-cardIn">
+      
+      {/* Header */}
+      <div className="text-center space-y-4">
+        <Loader2
+          className="mx-auto animate-spin text-cyan-400"
+          size={42}
+        />
+        <h3 className="text-2xl font-bold tracking-wide">
+          Stamping Identity
+        </h3>
+        <p className="text-sm text-blue-300">
+          Reading your on-chain footprint 🧊
+        </p>
+      </div>
 
-          <ProgressItem
-            done={currentStep !== "stamp"}
-            text="Stamping chosen identity"
-          />
-          <ProgressItem
-            done={currentStep === "defi" || currentStep === "finalizing"}
-            text="Checking transaction history"
-          />
-          <ProgressItem
-            done={currentStep === "finalizing"}
-            text="Analyzing DeFi & protocol interactions"
-          />
-          <ProgressItem
-            done={false}
-            active={currentStep === "finalizing"}
-            text="Finalizing Yeti level"
-          />
-        </section>
-      )}
+      {/* Progress Steps */}
+      <div className="space-y-4">
+        <AnimatedProgress
+          show={true}
+          done={currentStep !== "stamp"}
+          text="Stamping chosen identity"
+          delay={0}
+        />
+
+        <AnimatedProgress
+          show={currentStep !== "stamp"}
+          done={currentStep === "defi" || currentStep === "finalizing"}
+          text="Checking transaction history"
+          delay={150}
+        />
+
+        <AnimatedProgress
+          show={currentStep === "defi" || currentStep === "finalizing"}
+          done={currentStep === "finalizing"}
+          text="Analyzing DeFi & protocol interactions"
+          delay={300}
+        />
+
+        <AnimatedProgress
+          show={currentStep === "finalizing"}
+          active={currentStep === "finalizing"}
+          text="Finalizing Yeti level"
+          delay={450}
+        />
+      </div>
+    </div>
+  </section>
+)}
+
 
       {/* ---------------- NFT RESULT ---------------- */}
       {currentStep === "done" && identity && level && (
@@ -274,7 +364,7 @@ export default function App() {
       )}
 
       {/* ---------------- ANIMATIONS ---------------- */}
-      <style jsx>{`
+      <style >{`
         @keyframes fall {
           0% {
             transform: translateY(-10px) rotate(0deg);
