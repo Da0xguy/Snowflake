@@ -24,3 +24,6 @@
 .animate-bounce-slow {
   animation: bounce-slow 2s ease-in-out infinite;
 }
+.btn {
+  @apply px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700;
+}
