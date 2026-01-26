@@ -12,6 +12,7 @@ import {
    PieChart
 } from "lucide-react";
 import HeroPic from "./assets/heropic.png"
+import { ConnectButton, useCurrentAccount } from "@mysten/dapp-kit";
 
 type Identity = "Explorer" | "Builder" | "Staker";
 type Step =
@@ -40,10 +41,12 @@ function delay(ms: number) {
 }
 
 export default function App() {
-  const [wallet, setWallet] = useState<string | null>(null);
+  // const [wallet, setWallet] = useState<string | null>(null);
   const [identity, setIdentity] = useState<Identity | null>(null);
   const [level, setLevel] = useState<number | null>(null);
   const [currentStep, setCurrentStep] = useState<Step | null>(null);
+  const currentAccount = useCurrentAccount();
+  const wallet = currentAccount?.address
 
   const [snowflakes, setSnowflakes] = useState(
     Array.from({ length: 25 }).map(() => ({
@@ -56,26 +59,26 @@ export default function App() {
   );
 
   /* ---------------- WALLET ---------------- */
-  async function connectWallet() {
-    await delay(800);
-    setWallet("0x" + Math.random().toString(16).slice(2, 42));
-  }
+  // async function connectWallet() {
+  //   await delay(800);
+  //   setWallet("0x" + Math.random().toString(16).slice(2, 42));
+  // }
 
   /* ---------------- STAMP FLOW ---------------- */
   async function startStamping(type: Identity) {
     setIdentity(type);
     setCurrentStep("stamp");
 
-    await delay(1000);
+    await delay(5000);
     setCurrentStep("transactions");
 
-    await delay(1200);
+    await delay(5200);
     setCurrentStep("defi");
 
-    await delay(1200);
+    await delay(5200);
     setCurrentStep("finalizing");
 
-    await delay(1000);
+    await delay(5000);
     setLevel(Math.floor(Math.random() * 4) + 1);
     setCurrentStep("done");
   }
@@ -170,13 +173,17 @@ export default function App() {
         </div>
 
         {!wallet && (
-          <button
-            onClick={connectWallet}
-            className="flex items-center gap-2 px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 transition"
-          >
-            <Wallet size={18} />
-            Connect Wallet
-          </button>
+          <ConnectButton className="flex items-center gap-2 px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 transition" />
+          //  <Wallet size={18} />
+          //  Connect Wallet
+          //</ConnectButton>
+          // <button
+          //   onClick={connectWallet}
+          //   className="flex items-center gap-2 px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 transition"
+          // >
+          //   <Wallet size={18} />
+          //   Connect Wallet
+          // </button>
         )}
       </nav>
 
