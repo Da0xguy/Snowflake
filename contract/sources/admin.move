@@ -23,8 +23,6 @@ public fun mint(_: &YetiAdmin, image_url: String, level: u64, ctx: &mut TxContex
     }
 }
 
-
-
 public fun level(yeti_upgrade: &YetiUpgrade): u64 {
     yeti_upgrade.level
 }

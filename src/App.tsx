@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+"use client";
+import { useState } from "react";
 import {
   Snowflake,
   Wallet,
@@ -58,11 +59,6 @@ export default function App() {
     }))
   );
 
-  /* ---------------- WALLET ---------------- */
-  // async function connectWallet() {
-  //   await delay(800);
-  //   setWallet("0x" + Math.random().toString(16).slice(2, 42));
-  // }
 
   /* ---------------- STAMP FLOW ---------------- */
   async function startStamping(type: Identity) {
