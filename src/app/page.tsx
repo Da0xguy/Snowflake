@@ -74,7 +74,7 @@ function useUserYeti(address?: string) {
   });
 }
 
-export default function App() {
+export default function Page() {
   // const [wallet, setWallet] = useState<string | null>(null);
   const [identity, setIdentity] = useState<Identity | null>(null);
   const [level, setLevel] = useState<number | null>(null);

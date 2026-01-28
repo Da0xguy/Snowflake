@@ -1,9 +1,9 @@
 'use client'
 
-import App from "../App"
+import Page from "./page"
 
  
  
 export function ClientOnly() {
-  return <App />
+  return <Page />
 }
