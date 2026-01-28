@@ -16,9 +16,26 @@ import HeroPic from "../assets/heropic.png"
 import { ConnectButton, useCurrentAccount, useSuiClientQuery, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { trpc } from "../client";
 import { Transaction } from "@mysten/sui/transactions";
-import { PACKAGE_ID, YETI_TYPE, REGISTRY_ID } from "../constants";
+import { PACKAGE_ID, YETI_TYPE, REGISTRY_ID, AVAILABLE_LEVELS, type Identity } from "../constants";
 
-type Identity = "Explorer" | "Builder" | "Staker";
+// Helper to resolve the correct image (handling missing levels)
+function getYetiImage(identity: Identity, level: number): string {
+  const levels = AVAILABLE_LEVELS[identity];
+  if (!levels) return ""; // Should not happen
+
+  // Find exact match
+  if (levels.includes(level)) {
+    return `/nft/${identity.toLowerCase()}_level_${level}.png`;
+  }
+
+  // Fallback to the highest available level <= requested level
+  // Since levels are sorted (assumed from the constant), valid levels are those mapping to available images.
+  // Actually the logic for finding fallback:
+  const sorted = [...levels].sort((a, b) => a - b);
+  const fallback = sorted.reverse().find(l => l <= level) || sorted[sorted.length - 1]; // fallback to lowest if nothing found (unlikely as 1 is usually there)
+
+  return `/nft/${identity.toLowerCase()}_level_${fallback}.png`;
+}
 type Step =
   | "stamp"
   | "minting"
@@ -219,7 +236,8 @@ export default function App() {
 
   /* ---------------- SHARE ---------------- */
   function shareNFT() {
-    const image = `/nft/${identity?.toLowerCase()}_level_${level}.png`;
+    if (!identity || !level) return;
+    const image = getYetiImage(identity, level);
     if (navigator.share) {
       navigator.share({
         title: "My Yeti Identity",
@@ -275,8 +293,9 @@ export default function App() {
   }
 
   function downloadNFT() {
+    if (!identity || !level) return;
     const link = document.createElement("a");
-    link.href = `/nft/${identity?.toLowerCase()}_level_${level}.png`;
+    link.href = getYetiImage(identity, level);
     link.download = "yeti-identity.png";
     link.click();
   }
@@ -421,7 +440,7 @@ export default function App() {
         <section className="max-w-2xl mx-auto px-8 py-24 text-center space-y-10 relative z-10">
           <h2 className="text-3xl font-bold">Welcome Back, Yeti!</h2>
           <div className="p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl animate-cardIn">
-            <img src={`/nft/explorer_level_1.png`} className="w-48 mx-auto rounded-xl mb-6 shadow-lg" />
+            <img src={getYetiImage(currentIdentity as Identity || "Explorer", (currentLevel as number) || 1)} className="w-48 mx-auto rounded-xl mb-6 shadow-lg" />
             <p className="text-blue-200 mb-6">
               You have a Level {currentLevel} Yeti. Check if you are eligible for an upgrade based on your recent activity.
             </p>
@@ -543,7 +562,7 @@ export default function App() {
       {currentStep === "done" && (identity || currentIdentity) && level && (
         <section className="max-w-xl mx-auto px-8 py-24 text-center space-y-8 relative z-10">
           <img
-            src={`/nft/${(identity || currentIdentity)?.toLowerCase()}_level_${level}.png`}
+            src={getYetiImage((identity || currentIdentity) as Identity, level)}
             className="w-72 mx-auto rounded-3xl shadow-2xl"
           />
 
