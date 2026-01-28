@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Snowflake,
   Wallet,
@@ -101,15 +101,19 @@ export default function App() {
     currentIdentity
   });
 
-  const [snowflakes, setSnowflakes] = useState(
-    Array.from({ length: 25 }).map(() => ({
-      id: Math.random().toString(36).slice(2, 9),
-      left: Math.random() * 100,
-      size: 12 + Math.random() * 12,
-      delay: Math.random() * 5,
-      duration: 5 + Math.random() * 10,
-    }))
-  );
+  const [snowflakes, setSnowflakes] = useState<{ id: string; left: number; size: number; delay: number; duration: number }[]>([]);
+
+  useEffect(() => {
+    setSnowflakes(
+      Array.from({ length: 25 }).map(() => ({
+        id: Math.random().toString(36).slice(2, 9),
+        left: Math.random() * 100,
+        size: 12 + Math.random() * 12,
+        delay: Math.random() * 5,
+        duration: 5 + Math.random() * 10,
+      }))
+    );
+  }, []);
 
 
 
