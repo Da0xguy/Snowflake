@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import {
   Snowflake,
-  Wallet,
   CheckCircle,
   Loader2,
   Sparkles,
