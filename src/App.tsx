@@ -9,11 +9,12 @@ import {
   Share2,
   Download,
   Compass,
-   Pickaxe, 
-   PieChart
+  Pickaxe,
+  PieChart
 } from "lucide-react";
 import HeroPic from "./assets/heropic.png"
 import { ConnectButton, useCurrentAccount } from "@mysten/dapp-kit";
+import { trpc } from "./client";
 
 type Identity = "Explorer" | "Builder" | "Staker";
 type Step =
@@ -65,7 +66,9 @@ export default function App() {
     setIdentity(type);
     setCurrentStep("stamp");
 
-    await delay(5000);
+    await delay(1000);
+    const upgrade = await trpc.createUpgrade.mutate({ walletAddress: wallet! })
+    console.log("Upgrade: ", upgrade)
     setCurrentStep("transactions");
 
     await delay(5200);
@@ -94,47 +97,47 @@ export default function App() {
   }
 
   function AnimatedProgress({
-  text,
-  done,
-  active,
-  show,
-  delay = 0,
-}: {
-  text: string;
-  done?: boolean;
-  active?: boolean;
-  show: boolean;
-  delay?: number;
-}) {
-  if (!show) return null;
+    text,
+    done,
+    active,
+    show,
+    delay = 0,
+  }: {
+    text: string;
+    done?: boolean;
+    active?: boolean;
+    show: boolean;
+    delay?: number;
+  }) {
+    if (!show) return null;
 
-  return (
-    <div
-      className="flex items-center gap-3 text-sm opacity-0 animate-stepIn"
-      style={{ animationDelay: `${delay}ms` }}
-    >
-      {done ? (
-        <CheckCircle className="text-green-400" size={18} />
-      ) : active ? (
-        <Loader2 className="animate-spin text-cyan-400" size={18} />
-      ) : (
-        <div className="w-4 h-4 rounded-full border border-white/30" />
-      )}
-
-      <span
-        className={
-          done
-            ? "text-green-300"
-            : active
-            ? "text-cyan-300"
-            : "text-blue-200"
-        }
+    return (
+      <div
+        className="flex items-center gap-3 text-sm opacity-0 animate-stepIn"
+        style={{ animationDelay: `${delay}ms` }}
       >
-        {text}
-      </span>
-    </div>
-  );
-}
+        {done ? (
+          <CheckCircle className="text-green-400" size={18} />
+        ) : active ? (
+          <Loader2 className="animate-spin text-cyan-400" size={18} />
+        ) : (
+          <div className="w-4 h-4 rounded-full border border-white/30" />
+        )}
+
+        <span
+          className={
+            done
+              ? "text-green-300"
+              : active
+                ? "text-cyan-300"
+                : "text-blue-200"
+          }
+        >
+          {text}
+        </span>
+      </div>
+    );
+  }
 
   function downloadNFT() {
     const link = document.createElement("a");
@@ -174,7 +177,7 @@ export default function App() {
           //  Connect Wallet
           //</ConnectButton>
           // <button
-          //   onClick={connectWallet}
+          //   onClick={() => alert("you click a button")}
           //   className="flex items-center gap-2 px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 transition"
           // >
           //   <Wallet size={18} />
@@ -200,7 +203,7 @@ export default function App() {
             </div>
 
             <img
-              src={HeroPic}
+              src={HeroPic.src}
               className="w-72 mx-auto rounded-3xl shadow-2xl animate-float"
             />
           </div>
@@ -252,25 +255,25 @@ export default function App() {
               >
                 <div className="text-xl font-bold">{type}</div>
                 <div className="text-xs text-blue-300 mt-2 flex items-center justify-center gap-1">
-                {type === "Explorer" && (
-                  <>
-                    <Compass size={30} />
-                    Transactions & usage
-                  </>
-                )}
-                {type === "Builder" && (
-                  <>
-                    <Pickaxe size={30} />
-                    Contracts & deployments
-                  </>
-                )}
-                {type === "Staker" && (
-                  <>
-                    <PieChart size={30} />
-                    Liquidity & staking
-                  </>
-                )}
-              </div>
+                  {type === "Explorer" && (
+                    <>
+                      <Compass size={30} />
+                      Transactions & usage
+                    </>
+                  )}
+                  {type === "Builder" && (
+                    <>
+                      <Pickaxe size={30} />
+                      Contracts & deployments
+                    </>
+                  )}
+                  {type === "Staker" && (
+                    <>
+                      <PieChart size={30} />
+                      Liquidity & staking
+                    </>
+                  )}
+                </div>
               </button>
             ))}
           </div>
@@ -279,56 +282,56 @@ export default function App() {
 
       {/* ---------------- STAMPING PROCESS ---------------- */}
       {identity && currentStep && currentStep !== "done" && (
-  <section className="max-w-xl mx-auto px-4 sm:px-8 py-24 relative z-10">
-    <div className="relative rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl p-8 sm:p-10 space-y-8 animate-cardIn">
-      
-      {/* Header */}
-      <div className="text-center space-y-4">
-        <Loader2
-          className="mx-auto animate-spin text-cyan-400"
-          size={42}
-        />
-        <h3 className="text-2xl font-bold tracking-wide">
-          Stamping Identity
-        </h3>
-        <p className="text-sm text-blue-300">
-          Reading your on-chain footprint 🧊
-        </p>
-      </div>
+        <section className="max-w-xl mx-auto px-4 sm:px-8 py-24 relative z-10">
+          <div className="relative rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl p-8 sm:p-10 space-y-8 animate-cardIn">
 
-      {/* Progress Steps */}
-      <div className="space-y-4">
-        <AnimatedProgress
-          show={true}
-          done={currentStep !== "stamp"}
-          text="Stamping chosen identity"
-          delay={0}
-        />
+            {/* Header */}
+            <div className="text-center space-y-4">
+              <Loader2
+                className="mx-auto animate-spin text-cyan-400"
+                size={42}
+              />
+              <h3 className="text-2xl font-bold tracking-wide">
+                Stamping Identity
+              </h3>
+              <p className="text-sm text-blue-300">
+                Reading your on-chain footprint 🧊
+              </p>
+            </div>
 
-        <AnimatedProgress
-          show={currentStep !== "stamp"}
-          done={currentStep === "defi" || currentStep === "finalizing"}
-          text="Checking transaction history"
-          delay={150}
-        />
+            {/* Progress Steps */}
+            <div className="space-y-4">
+              <AnimatedProgress
+                show={true}
+                done={currentStep !== "stamp"}
+                text="Stamping chosen identity"
+                delay={0}
+              />
 
-        <AnimatedProgress
-          show={currentStep === "defi" || currentStep === "finalizing"}
-          done={currentStep === "finalizing"}
-          text="Analyzing DeFi & protocol interactions"
-          delay={300}
-        />
+              <AnimatedProgress
+                show={currentStep !== "stamp"}
+                done={currentStep === "defi" || currentStep === "finalizing"}
+                text="Checking transaction history"
+                delay={150}
+              />
 
-        <AnimatedProgress
-          show={currentStep === "finalizing"}
-          active={currentStep === "finalizing"}
-          text="Finalizing Yeti level"
-          delay={450}
-        />
-      </div>
-    </div>
-  </section>
-)}
+              <AnimatedProgress
+                show={currentStep === "defi" || currentStep === "finalizing"}
+                done={currentStep === "finalizing"}
+                text="Analyzing DeFi & protocol interactions"
+                delay={300}
+              />
+
+              <AnimatedProgress
+                show={currentStep === "finalizing"}
+                active={currentStep === "finalizing"}
+                text="Finalizing Yeti level"
+                delay={450}
+              />
+            </div>
+          </div>
+        </section>
+      )}
 
 
       {/* ---------------- NFT RESULT ---------------- */}

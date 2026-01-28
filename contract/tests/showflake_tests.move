@@ -72,7 +72,3 @@ fun test_only_one_nft_per_address() {
     registry.destroy();
 }
 
-#[test, expected_failure(abort_code = ::showflake::showflake_tests::ENotImplemented)]
-fun test_upgrade_fail() {
-    abort ENotImplemented
-}
