@@ -4,7 +4,6 @@ import { createNetworkConfig, SuiClientProvider, WalletProvider } from '@mysten/
 import { getFullnodeUrl } from '@mysten/sui/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@mysten/dapp-kit/dist/index.css';
-import './index.css'
 
 // Config options for the networks you want to connect to
 const { networkConfig } = createNetworkConfig({
