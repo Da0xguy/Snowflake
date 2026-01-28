@@ -12,9 +12,9 @@ import {
   Pickaxe,
   PieChart
 } from "lucide-react";
-import HeroPic from "./assets/heropic.png"
+import HeroPic from "../assets/heropic.png"
 import { ConnectButton, useCurrentAccount } from "@mysten/dapp-kit";
-import { trpc } from "./client";
+import { trpc } from "../client";
 
 type Identity = "Explorer" | "Builder" | "Staker";
 type Step =
