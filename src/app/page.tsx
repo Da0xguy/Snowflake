@@ -405,7 +405,7 @@ export default function App() {
             Choose your path to mint your identity NFT on-chain.
           </p>
 
-          <div className="flex justify-center gap-4 mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
             {(["Explorer", "Builder", "Staker"] as Identity[]).map((type) => (
               <button
                 key={type}
