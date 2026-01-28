@@ -13,15 +13,20 @@ import {
   PieChart
 } from "lucide-react";
 import HeroPic from "../assets/heropic.png"
-import { ConnectButton, useCurrentAccount } from "@mysten/dapp-kit";
+import { ConnectButton, useCurrentAccount, useSuiClientQuery, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { trpc } from "../client";
+import { Transaction } from "@mysten/sui/transactions";
+import { PACKAGE_ID, YETI_TYPE, REGISTRY_ID } from "../constants";
 
 type Identity = "Explorer" | "Builder" | "Staker";
 type Step =
   | "stamp"
+  | "minting"
   | "transactions"
   | "defi"
   | "finalizing"
+  | "upgrade-available"
+  | "upgrading"
   | "done";
 
 /* ---------------- MOCK CONTRACT READ ---------------- */
@@ -42,13 +47,27 @@ function delay(ms: number) {
   return new Promise((res) => setTimeout(res, ms));
 }
 
+function useUserYeti(address?: string) {
+  return useSuiClientQuery("getOwnedObjects", {
+    owner: address!,
+    filter: { StructType: YETI_TYPE },
+    options: { showContent: true },
+  }, {
+    enabled: !!address
+  });
+}
+
 export default function App() {
   // const [wallet, setWallet] = useState<string | null>(null);
   const [identity, setIdentity] = useState<Identity | null>(null);
   const [level, setLevel] = useState<number | null>(null);
   const [currentStep, setCurrentStep] = useState<Step | null>(null);
+
+  const [upgradeId, setUpgradeId] = useState<string | null>(null);
   const currentAccount = useCurrentAccount();
   const wallet = currentAccount?.address
+  const { data: userYeti } = useUserYeti(wallet);
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
 
   const [snowflakes, setSnowflakes] = useState(
     Array.from({ length: 25 }).map(() => ({
@@ -61,14 +80,53 @@ export default function App() {
   );
 
 
-  /* ---------------- STAMP FLOW ---------------- */
-  async function startStamping(type: Identity) {
+
+  /* ---------------- MINT FLOW (New Users) ---------------- */
+  function handleMint(type: Identity) {
+    if (!wallet || !REGISTRY_ID) return;
     setIdentity(type);
+    setCurrentStep("minting");
+
+    const tx = new Transaction();
+    const [mint] = tx.moveCall({
+      target: `${PACKAGE_ID}::showflake::mint`,
+      arguments: [tx.object(REGISTRY_ID)]
+    });
+
+    tx.transferObjects([mint], wallet)
+
+    signAndExecuteTransaction({
+      transaction: tx,
+    }, {
+      onSuccess: (result) => {
+        console.log("Mint success:", result);
+        // In a real app, invalidating query to refetch userYeti would happen here
+        setLevel(1);
+        setCurrentStep("done");
+      },
+      onError: (error) => {
+        console.error("Mint failed:", error);
+        alert("Mint transaction failed. See console.");
+        setCurrentStep(null);
+      }
+    });
+  }
+
+  /* ---------------- UPGRADE FLOW (Existing Users) ---------------- */
+  async function startUpgradeFlow() {
+    // Only existing users enter here
     setCurrentStep("stamp");
 
     await delay(1000);
     const upgrade = await trpc.createUpgrade.mutate({ walletAddress: wallet! })
     console.log("Upgrade: ", upgrade)
+
+    if (upgrade && upgrade.id) {
+      setUpgradeId(upgrade.id);
+      setCurrentStep("upgrade-available");
+      return;
+    }
+
     setCurrentStep("transactions");
 
     await delay(5200);
@@ -80,6 +138,66 @@ export default function App() {
     await delay(5000);
     setLevel(Math.floor(Math.random() * 4) + 1);
     setCurrentStep("done");
+  }
+
+  /* ---------------- STAMP FLOW ---------------- */
+  async function startStamping(type: Identity) {
+
+    setIdentity(type);
+    setCurrentStep("stamp");
+
+    await delay(1000);
+    const upgrade = await trpc.createUpgrade.mutate({ walletAddress: wallet! })
+    console.log("Upgrade: ", upgrade)
+
+    if (upgrade && upgrade.id) {
+      setUpgradeId(upgrade.id);
+      setCurrentStep("upgrade-available");
+      return;
+    }
+
+    setCurrentStep("transactions");
+
+    await delay(5200);
+    setCurrentStep("defi");
+
+    await delay(5200);
+    setCurrentStep("finalizing");
+
+    await delay(5000);
+    setLevel(Math.floor(Math.random() * 4) + 1);
+    setCurrentStep("done");
+  }
+
+  function handleUpgrade() {
+    if (!upgradeId || !wallet || !userYeti?.data?.[0]?.data?.objectId) return;
+
+    const tx = new Transaction();
+    tx.moveCall({
+      target: `${PACKAGE_ID}::showflake::upgrade_yeti`,
+      arguments: [
+        tx.object(userYeti.data[0].data.objectId), // Yeti Object
+        tx.object(upgradeId) // YetiUpgrade Object from backend
+      ]
+    });
+
+    setCurrentStep("upgrading");
+
+    signAndExecuteTransaction({
+      transaction: tx,
+    }, {
+      onSuccess: (result) => {
+        console.log("Upgrade success:", result);
+        // Optimistic update or refetch could happen here
+        setLevel(4); // Mock level update
+        setCurrentStep("done");
+      },
+      onError: (error) => {
+        console.error("Upgrade failed:", error);
+        alert("Upgrade transaction failed. See console for details.");
+        setCurrentStep("done"); // Fallback or error state
+      }
+    });
   }
 
   /* ---------------- SHARE ---------------- */
@@ -238,19 +356,20 @@ export default function App() {
         </section>
       )}
 
-      {/* ---------------- IDENTITY SELECTION ---------------- */}
-      {wallet && !identity && (
+
+      {/* ---------------- NEW USER ONBOARDING (MINT) ---------------- */}
+      {wallet && !identity && (!userYeti?.data || userYeti.data.length === 0) && (
         <section className="max-w-2xl mx-auto px-8 py-24 text-center space-y-10 relative z-10">
-          <h2 className="text-3xl font-bold">Stamp Your Identity</h2>
+          <h2 className="text-3xl font-bold">Mint Your First Yeti</h2>
           <p className="text-blue-200">
-            Choose the path that best represents how you interact on-chain.
+            Choose your path to mint your identity NFT on-chain.
           </p>
 
           <div className="grid grid-cols-3 gap-4 mt-6">
             {(["Explorer", "Builder", "Staker"] as Identity[]).map((type) => (
               <button
                 key={type}
-                onClick={() => startStamping(type)}
+                onClick={() => handleMint(type)}
                 className="p-6 rounded-2xl bg-white/5 border border-white/20 hover:bg-white/10 hover:scale-105 transition"
               >
                 <div className="text-xl font-bold">{type}</div>
@@ -280,8 +399,38 @@ export default function App() {
         </section>
       )}
 
-      {/* ---------------- STAMPING PROCESS ---------------- */}
-      {identity && currentStep && currentStep !== "done" && (
+      {/* ---------------- EXISTING USER DASHBOARD (UPGRADE) ---------------- */}
+      {wallet && userYeti?.data && userYeti.data.length > 0 && !currentStep && (
+        <section className="max-w-2xl mx-auto px-8 py-24 text-center space-y-10 relative z-10">
+          <h2 className="text-3xl font-bold">Welcome Back, Yeti!</h2>
+          <div className="p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl animate-cardIn">
+            <img src={`/nft/explorer_level_1.png`} className="w-48 mx-auto rounded-xl mb-6 shadow-lg" />
+            <p className="text-blue-200 mb-6">
+              You have a Level {1} Yeti. Check if you are eligible for an upgrade based on your recent activity.
+            </p>
+            <button
+              onClick={startUpgradeFlow}
+              className="px-8 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 font-bold transition flex items-center justify-center gap-2 mx-auto"
+            >
+              <Sparkles size={20} />
+              Check for Upgrades
+            </button>
+          </div>
+        </section>
+      )}
+
+      {/* ---------------- MINTING STATE ---------------- */}
+      {currentStep === "minting" && (
+        <section className="max-w-xl mx-auto px-4 sm:px-8 py-24 relative z-10 text-center">
+          <div className="relative rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl p-8 sm:p-10 space-y-8 animate-cardIn">
+            <Loader2 className="mx-auto animate-spin text-cyan-400" size={42} />
+            <h3 className="text-2xl font-bold">Minting Your Yeti...</h3>
+            <p className="text-blue-200">Please approve the transaction in your wallet.</p>
+          </div>
+        </section>
+      )}
+
+      {currentStep && currentStep !== "done" && currentStep !== "upgrade-available" && currentStep !== "upgrading" && currentStep !== "minting" && (
         <section className="max-w-xl mx-auto px-4 sm:px-8 py-24 relative z-10">
           <div className="relative rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl p-8 sm:p-10 space-y-8 animate-cardIn">
 
@@ -329,6 +478,44 @@ export default function App() {
                 delay={450}
               />
             </div>
+          </div>
+        </section>
+      )}
+
+      {/* ---------------- UPGRADE PROMPT ---------------- */}
+      {currentStep === "upgrade-available" && (
+        <section className="max-w-xl mx-auto px-4 sm:px-8 py-24 relative z-10 text-center">
+          <div className="relative rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl p-8 sm:p-10 space-y-8 animate-cardIn">
+            <h3 className="text-3xl font-bold">Upgrade Available!</h3>
+            <p className="text-blue-200">
+              Your on-chain activity qualifies you for a Level 4 Yeti Upgrade.
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={handleUpgrade}
+                className="px-6 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 font-bold transition flex items-center gap-2"
+              >
+                <Sparkles size={20} />
+                Upgrade Now
+              </button>
+              <button
+                onClick={() => setCurrentStep("transactions")}
+                className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 transition"
+              >
+                Skip
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ---------------- UPGRADING STATE ---------------- */}
+      {currentStep === "upgrading" && (
+        <section className="max-w-xl mx-auto px-4 sm:px-8 py-24 relative z-10 text-center">
+          <div className="relative rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl p-8 sm:p-10 space-y-8 animate-cardIn">
+            <Loader2 className="mx-auto animate-spin text-cyan-400" size={42} />
+            <h3 className="text-2xl font-bold">Applying Upgrade...</h3>
+            <p className="text-blue-200">Please approve the transaction in your wallet.</p>
           </div>
         </section>
       )}

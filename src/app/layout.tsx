@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
-import { Providers } from '../Providers'
-import '../index.css'
+import { Providers } from './providers'
+import '../globals.css'
 
 export const metadata: Metadata = {
   title: 'yeti-stamp',
