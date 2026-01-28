@@ -64,10 +64,25 @@ export default function App() {
   const [currentStep, setCurrentStep] = useState<Step | null>(null);
 
   const [upgradeId, setUpgradeId] = useState<string | null>(null);
+  const [previousAction, setPreviousAction] = useState<"mint" | "upgrade" | null>(null);
   const currentAccount = useCurrentAccount();
   const wallet = currentAccount?.address
   const { data: userYeti } = useUserYeti(wallet);
+  console.log("Yeti Nft :", userYeti)
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+  const yetiContent = userYeti?.data?.[0]?.data?.content;
+  const currentLevel = yetiContent?.dataType === "moveObject" ? (yetiContent.fields as any)?.level : undefined;
+  const currentIdentity = yetiContent?.dataType === "moveObject" ? (yetiContent.fields as any)?.identity : undefined;
+
+  // Debugging logs
+  console.log("Render State:", {
+    currentStep,
+    identity,
+    level,
+    previousAction,
+    currentLevel,
+    currentIdentity
+  });
 
   const [snowflakes, setSnowflakes] = useState(
     Array.from({ length: 25 }).map(() => ({
@@ -102,6 +117,7 @@ export default function App() {
         console.log("Mint success:", result);
         // In a real app, invalidating query to refetch userYeti would happen here
         setLevel(1);
+        setPreviousAction("mint");
         setCurrentStep("done");
       },
       onError: (error) => {
@@ -190,6 +206,7 @@ export default function App() {
         console.log("Upgrade success:", result);
         // Optimistic update or refetch could happen here
         setLevel(4); // Mock level update
+        setPreviousAction("upgrade");
         setCurrentStep("done");
       },
       onError: (error) => {
@@ -406,7 +423,7 @@ export default function App() {
           <div className="p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl animate-cardIn">
             <img src={`/nft/explorer_level_1.png`} className="w-48 mx-auto rounded-xl mb-6 shadow-lg" />
             <p className="text-blue-200 mb-6">
-              You have a Level {1} Yeti. Check if you are eligible for an upgrade based on your recent activity.
+              You have a Level {currentLevel} Yeti. Check if you are eligible for an upgrade based on your recent activity.
             </p>
             <button
               onClick={startUpgradeFlow}
@@ -488,7 +505,7 @@ export default function App() {
           <div className="relative rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl p-8 sm:p-10 space-y-8 animate-cardIn">
             <h3 className="text-3xl font-bold">Upgrade Available!</h3>
             <p className="text-blue-200">
-              Your on-chain activity qualifies you for a Level 4 Yeti Upgrade.
+              Your on-chain activity qualifies you for a Level {currentLevel} Yeti Upgrade.
             </p>
             <div className="flex justify-center gap-4">
               <button
@@ -522,16 +539,20 @@ export default function App() {
 
 
       {/* ---------------- NFT RESULT ---------------- */}
-      {currentStep === "done" && identity && level && (
+      {/* ---------------- NFT RESULT ---------------- */}
+      {currentStep === "done" && (identity || currentIdentity) && level && (
         <section className="max-w-xl mx-auto px-8 py-24 text-center space-y-8 relative z-10">
           <img
-            src={`/nft/${identity.toLowerCase()}_level_${level}.png`}
+            src={`/nft/${(identity || currentIdentity)?.toLowerCase()}_level_${level}.png`}
             className="w-72 mx-auto rounded-3xl shadow-2xl"
           />
 
           <h2 className="text-3xl font-bold">
-            {identity} Yeti — Level {level}
+            {previousAction === "upgrade" ? "Upgrade Successful!" : `${identity || currentIdentity} Yeti Minted!`}
           </h2>
+          <p className="text-xl text-cyan-300 font-semibold">
+            Level {level} Unlocked
+          </p>
 
           <p className="text-blue-200">
             Your NFT will continue evolving as your on-chain activity grows.
