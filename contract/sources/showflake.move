@@ -4,7 +4,7 @@ use showflake::admin::YetiUpgrade;
 use std::string::String;
 
 
-public struct Yeti has key, store {
+public struct Yeti has key {
     id: UID,
     image_url: String,
     level: u64
@@ -23,6 +23,11 @@ public fun mint(registry: &mut Registry, ctx: &mut TxContext): Yeti {
 
     registry.add_entry(ctx.sender());
     create(ctx)
+}
+
+public fun mint_and_send(registry: &mut Registry, recipient: address, ctx: &mut TxContext ) {
+    let yeti = mint(registry, ctx);
+    transfer::transfer(yeti, recipient)
 }
 
 public fun upgrade_yeti(yeti: &mut Yeti, yeti_upgrade: YetiUpgrade) {
