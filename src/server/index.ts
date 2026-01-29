@@ -15,20 +15,67 @@ const appRouter = router({
         .mutation(async (opts) => {
             const { input } = opts; // Restore input destructuring
 
-            if (!process.env.SUI_PRIVATE_KEY || !process.env.ADMIN_CAP_ID) {
-                console.warn("Missing SUI_PRIVATE_KEY or ADMIN_CAP_ID. Returning mock data.");
-                return { 
-                    level: 4, 
-                    id: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef' 
-                };
-            }
-
             try {
-                const { SUI_PRIVATE_KEY, ADMIN_CAP_ID } = process.env;
+                // Ensure variables are treated as strings
+                const SUI_PRIVATE_KEY = process.env.SUI_PRIVATE_KEY!;
+                const ADMIN_CAP_ID = process.env.ADMIN_CAP_ID!;
+                
                 // Use devnet as default
                 const client = new SuiClient({ url: getFullnodeUrl('devnet') });
-                
-                // 1. Fetch User's Yeti to determine current level
+
+                // -------------------------------------------------------------
+                // 1. Verify User Activity (Explorer Logic)
+                // -------------------------------------------------------------
+                console.log(`Verifying activity for ${input.walletAddress}...`);
+                const history = await client.queryTransactionBlocks({
+                    filter: { FromAddress: input.walletAddress },
+                    limit: 50, // Analyze last 50 transactions
+                    options: {
+                        showInput: true,
+                        showEffects: true,
+                    }
+                });
+
+                const txCount = history.data.length;
+                const uniquePackages = new Set<string>();
+
+                for (const tx of history.data) {
+                    const transaction = tx.transaction?.data?.transaction;
+                    // Check for ProgrammableTransaction
+                    if (transaction?.kind === 'ProgrammableTransaction') {
+                        for (const cmd of transaction.transactions) {
+                            // cmd can be { MoveCall: ... }, { TransferObjects: ... }, etc.
+                            // We are looking for MoveCall to identify protocol interactions
+                            if ('MoveCall' in cmd && cmd.MoveCall) {
+                                const pkg = cmd.MoveCall.package;
+                                // Basic filter: Ignore system packages (0x1, 0x2) and own package
+                                if (pkg !== '0x0000000000000000000000000000000000000000000000000000000000000001' && 
+                                    pkg !== '0x0000000000000000000000000000000000000000000000000000000000000002' && 
+                                    pkg !== PACKAGE_ID) {
+                                    uniquePackages.add(pkg);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                const protocolPoints = uniquePackages.size * 5;
+                const txPoints = Math.floor(txCount / 10) * 2;
+                const totalPoints = protocolPoints + txPoints;
+
+                console.log(`Activity Score: ${totalPoints} (Tx: ${txCount}, Protocols: ${uniquePackages.size})`);
+
+                if (totalPoints < 30) {
+                     return {
+                        status: 'insufficient_points',
+                        score: totalPoints,
+                        txCount: txCount,
+                        protocolCount: uniquePackages.size,
+                        required: 30
+                     };
+                }
+
+                // 2. Fetch User's Yeti to determine current level
                 const ownedObjects = await client.getOwnedObjects({
                     owner: input.walletAddress,
                     filter: { StructType: YETI_TYPE },
@@ -53,18 +100,15 @@ const appRouter = router({
                 const tx = new Transaction();
 
                 // 2. Mint Upgrade Object
-                // Returns result which is the YetiUpgrade object
-                const [upgradeObj] = tx.moveCall({
-                    target: `${PACKAGE_ID}::admin::mint`,
+                tx.moveCall({
+                    target: `${PACKAGE_ID}::admin::mint_and_send`,
                     arguments: [
                         tx.object(ADMIN_CAP_ID),
+                        tx.pure.address(input.walletAddress),
                         tx.pure.string(`https://assets.example.com/yeti_level_${nextLevel}.png`), 
                         tx.pure.u64(nextLevel)
                     ]
                 });
-
-                // 3. Transfer to User
-                tx.transferObjects([upgradeObj], tx.pure.address(input.walletAddress));
 
                 // 4. Execute with effects and object changes
                 const result = await client.signAndExecuteTransaction({
@@ -86,6 +130,7 @@ const appRouter = router({
                 }
 
                 return {
+                    status: 'success',
                     level: nextLevel,
                     id: createdObj.objectId
                 };

@@ -5,7 +5,7 @@ public struct YetiAdmin has key, store {
     id: UID
 }
 
-public struct YetiUpgrade has key, store {
+public struct YetiUpgrade has key {
     id: UID,
     image_url: String,
     level: u64
@@ -21,6 +21,11 @@ public fun mint(_: &YetiAdmin, image_url: String, level: u64, ctx: &mut TxContex
         image_url,
         level,
     }
+}
+
+public fun mint_and_send(yeti_admin: &YetiAdmin, recipient: address, image_url: String, level: u64, ctx: &mut TxContext) {
+    let yeti = mint(yeti_admin, image_url, level, ctx);
+    transfer::transfer(yeti, recipient)
 }
 
 public fun level(yeti_upgrade: &YetiUpgrade): u64 {

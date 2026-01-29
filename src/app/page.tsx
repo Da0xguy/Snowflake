@@ -9,7 +9,8 @@ import {
   Download,
   Compass,
   Pickaxe,
-  PieChart
+  PieChart,
+  Home
 } from "lucide-react";
 import HeroPic from "../assets/heropic.png"
 import { ConnectButton, useCurrentAccount, useSuiClientQuery, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
@@ -43,6 +44,8 @@ type Step =
   | "finalizing"
   | "upgrade-available"
   | "upgrading"
+  | "insufficient-points"
+  | "error" // New step
   | "done";
 
 /* ---------------- MOCK CONTRACT READ ---------------- */
@@ -79,11 +82,13 @@ export default function Page() {
   const [level, setLevel] = useState<number | null>(null);
   const [currentStep, setCurrentStep] = useState<Step | null>(null);
 
+  const [scoreData, setScoreData] = useState<{ score: number; txCount: number; protocolCount: number } | null>(null);
+
   const [upgradeId, setUpgradeId] = useState<string | null>(null);
   const [previousAction, setPreviousAction] = useState<"mint" | "upgrade" | null>(null);
   const currentAccount = useCurrentAccount();
   const wallet = currentAccount?.address
-  const { data: userYeti } = useUserYeti(wallet);
+  const { data: userYeti, refetch: refetchYeti } = useUserYeti(wallet);
   console.log("Yeti Nft :", userYeti)
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   const yetiContent = userYeti?.data?.[0]?.data?.content;
@@ -123,12 +128,13 @@ export default function Page() {
     setCurrentStep("minting");
 
     const tx = new Transaction();
-    const [mint] = tx.moveCall({
-      target: `${PACKAGE_ID}::showflake::mint`,
-      arguments: [tx.object(REGISTRY_ID)]
+    tx.moveCall({
+      target: `${PACKAGE_ID}::showflake::mint_and_send`,
+      arguments: [
+        tx.object(REGISTRY_ID),
+        tx.pure.address(wallet!)
+      ]
     });
-
-    tx.transferObjects([mint], wallet)
 
     signAndExecuteTransaction({
       transaction: tx,
@@ -142,8 +148,7 @@ export default function Page() {
       },
       onError: (error) => {
         console.error("Mint failed:", error);
-        alert("Mint transaction failed. See console.");
-        setCurrentStep(null);
+        setCurrentStep("error");
       }
     });
   }
@@ -155,9 +160,19 @@ export default function Page() {
 
     await delay(1000);
     const upgrade = await trpc.createUpgrade.mutate({ walletAddress: wallet! })
-    console.log("Upgrade: ", upgrade)
+    console.log("Upgrade response: ", upgrade)
 
-    if (upgrade && upgrade.id) {
+    if (upgrade.status === 'insufficient_points') {
+      setScoreData({
+        score: upgrade.score!, // Force unwrap as we know it exists for this status
+        txCount: upgrade.txCount!,
+        protocolCount: upgrade.protocolCount!
+      });
+      setCurrentStep("insufficient-points");
+      return;
+    }
+
+    if (upgrade.status === 'success' && upgrade.id) {
       setUpgradeId(upgrade.id);
       setCurrentStep("upgrade-available");
       return;
@@ -231,8 +246,7 @@ export default function Page() {
       },
       onError: (error) => {
         console.error("Upgrade failed:", error);
-        alert("Upgrade transaction failed. See console for details.");
-        setCurrentStep("done"); // Fallback or error state
+        setCurrentStep("error");
       }
     });
   }
@@ -471,7 +485,7 @@ export default function Page() {
         </section>
       )}
 
-      {currentStep && currentStep !== "done" && currentStep !== "upgrade-available" && currentStep !== "upgrading" && currentStep !== "minting" && (
+      {currentStep && currentStep !== "done" && currentStep !== "upgrade-available" && currentStep !== "upgrading" && currentStep !== "minting" && currentStep !== "insufficient-points" && currentStep !== "error" && (
         <section className="max-w-xl mx-auto px-4 sm:px-8 py-24 relative z-10">
           <div className="relative rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl p-8 sm:p-10 space-y-8 animate-cardIn">
 
@@ -523,7 +537,58 @@ export default function Page() {
         </section>
       )}
 
+      {/* ---------------- INSUFFICIENT POINTS UI ---------------- */}
+      {currentStep === "insufficient-points" && scoreData && (
+        <section className="max-w-xl mx-auto px-4 sm:px-8 py-24 relative z-10 text-center">
+          <div className="relative rounded-3xl bg-red-500/10 backdrop-blur-xl border border-red-500/30 shadow-2xl p-8 sm:p-10 space-y-6 animate-cardIn">
+            <h3 className="text-3xl font-bold text-red-400">Upgrade Locked</h3>
+            <p className="text-blue-200">
+              You need more on-chain activity to evolve your Yeti.
+            </p>
+
+            <div className="p-4 rounded-xl bg-black/40 border border-white/5 text-left space-y-2">
+              <div className="flex justify-between items-center text-lg font-bold">
+                <span>Current Score:</span>
+                <span className={scoreData.score >= 30 ? "text-green-400" : "text-red-400"}>{scoreData.score} / 30</span>
+              </div>
+              <hr className="border-white/10 my-2" />
+              <div className="flex justify-between items-center text-sm text-blue-300">
+                <span>Transactions ({scoreData.txCount}):</span>
+                <span>+{Math.floor(scoreData.txCount / 10) * 2} pts</span>
+              </div>
+              <div className="flex justify-between items-center text-sm text-blue-300">
+                <span>Unique Protocols ({scoreData.protocolCount}):</span>
+                <span>+{scoreData.protocolCount * 5} pts</span>
+              </div>
+            </div>
+
+            <div className="flex justify-center gap-4 pt-4">
+              <button
+                onClick={() => setCurrentStep(null)}
+                className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 transition font-semibold"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ---------------- UPGRADE PROMPT ---------------- */}
+
+      {/* ---------------- ERROR STATE ---------------- */}
+      {currentStep === "error" && (
+        <TransactionFailed
+          onRetry={() => {
+            if (upgradeId) {
+              handleUpgrade();
+            } else if (identity) {
+              handleMint(identity);
+            }
+          }}
+          onClose={() => setCurrentStep(null)}
+        />
+      )}
       {currentStep === "upgrade-available" && (
         <section className="max-w-xl mx-auto px-4 sm:px-8 py-24 relative z-10 text-center">
           <div className="relative rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl p-8 sm:p-10 space-y-8 animate-cardIn">
@@ -584,6 +649,16 @@ export default function Page() {
 
           <div className="flex justify-center gap-4 mt-4">
             <button
+              onClick={async () => {
+                await refetchYeti();
+                setCurrentStep(null);
+              }}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20"
+            >
+              <Home size={18} />
+              Home
+            </button>
+            <button
               onClick={shareNFT}
               className="flex items-center gap-2 px-6 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500"
             >
@@ -642,25 +717,37 @@ function StepCard({ title, desc, delay = 0 }: { title: string; desc: string; del
   );
 }
 
-// function ProgressItem({
-//   text,
-//   done,
-//   active,
-// }: {
-//   text: string;
-//   done?: boolean;
-//   active?: boolean;
-// }) {
-//   return (
-//     <div className="flex items-center gap-3 justify-center text-sm">
-//       {done ? (
-//         <CheckCircle className="text-green-400" size={18} />
-//       ) : active ? (
-//         <Loader2 className="animate-spin text-cyan-400" size={18} />
-//       ) : (
-//         <div className="w-4 h-4 rounded-full border border-white/30" />
-//       )}
-//       <span className={done ? "text-green-300" : "text-blue-200"}>{text}</span>
-//     </div>
-//   );
-// }
+function TransactionFailed({
+  onRetry,
+  onClose,
+}: {
+  onRetry: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <section className="max-w-xl mx-auto px-4 sm:px-8 py-24 relative z-10 text-center">
+      <div className="relative rounded-3xl bg-red-500/10 backdrop-blur-xl border border-red-500/30 shadow-2xl p-8 sm:p-10 space-y-6 animate-cardIn">
+        <h3 className="text-3xl font-bold text-red-400">Transaction Failed</h3>
+        <p className="text-blue-200">
+          Something went wrong while processing your transaction. Please check your
+          wallet and try again.
+        </p>
+
+        <div className="flex justify-center gap-4 pt-4">
+          <button
+            onClick={onRetry}
+            className="px-6 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 transition font-semibold"
+          >
+            Try Again
+          </button>
+          <button
+            onClick={onClose}
+            className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 transition font-semibold"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
