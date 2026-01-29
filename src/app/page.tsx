@@ -342,19 +342,7 @@ export default function Page() {
           SnowFlake
         </div>
 
-        {!wallet && (
-          <ConnectButton className="flex items-center gap-2 px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 transition" />
-          //  <Wallet size={18} />
-          //  Connect Wallet
-          //</ConnectButton>
-          // <button
-          //   onClick={() => alert("you click a button")}
-          //   className="flex items-center gap-2 px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 transition"
-          // >
-          //   <Wallet size={18} />
-          //   Connect Wallet
-          // </button>
-        )}
+        <ConnectButton className="flex items-center gap-2 px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 transition" />
       </nav>
 
       {/* ---------------- LANDING ---------------- */}
