@@ -9,7 +9,8 @@ import {
   Download,
   Compass,
   Pickaxe,
-  PieChart
+  PieChart,
+  Home
 } from "lucide-react";
 import HeroPic from "../assets/heropic.png"
 import { ConnectButton, useCurrentAccount, useSuiClientQuery, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
@@ -87,7 +88,7 @@ export default function Page() {
   const [previousAction, setPreviousAction] = useState<"mint" | "upgrade" | null>(null);
   const currentAccount = useCurrentAccount();
   const wallet = currentAccount?.address
-  const { data: userYeti } = useUserYeti(wallet);
+  const { data: userYeti, refetch: refetchYeti } = useUserYeti(wallet);
   console.log("Yeti Nft :", userYeti)
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   const yetiContent = userYeti?.data?.[0]?.data?.content;
@@ -647,6 +648,16 @@ export default function Page() {
           </p>
 
           <div className="flex justify-center gap-4 mt-4">
+            <button
+              onClick={async () => {
+                await refetchYeti();
+                setCurrentStep(null);
+              }}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20"
+            >
+              <Home size={18} />
+              Home
+            </button>
             <button
               onClick={shareNFT}
               className="flex items-center gap-2 px-6 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500"
