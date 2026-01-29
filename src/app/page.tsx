@@ -176,34 +176,34 @@ export default function Page() {
     setCurrentStep("done");
   }
 
-  /* ---------------- STAMP FLOW ---------------- */
-  async function startStamping(type: Identity) {
+  // /* ---------------- STAMP FLOW ---------------- */
+  // async function startStamping(type: Identity) {
 
-    setIdentity(type);
-    setCurrentStep("stamp");
+  //   setIdentity(type);
+  //   setCurrentStep("stamp");
 
-    await delay(1000);
-    const upgrade = await trpc.createUpgrade.mutate({ walletAddress: wallet! })
-    console.log("Upgrade: ", upgrade)
+  //   await delay(1000);
+  //   const upgrade = await trpc.createUpgrade.mutate({ walletAddress: wallet! })
+  //   console.log("Upgrade: ", upgrade)
 
-    if (upgrade && upgrade.id) {
-      setUpgradeId(upgrade.id);
-      setCurrentStep("upgrade-available");
-      return;
-    }
+  //   if (upgrade && upgrade.id) {
+  //     setUpgradeId(upgrade.id);
+  //     setCurrentStep("upgrade-available");
+  //     return;
+  //   }
 
-    setCurrentStep("transactions");
+  //   setCurrentStep("transactions");
 
-    await delay(5200);
-    setCurrentStep("defi");
+  //   await delay(5200);
+  //   setCurrentStep("defi");
 
-    await delay(5200);
-    setCurrentStep("finalizing");
+  //   await delay(5200);
+  //   setCurrentStep("finalizing");
 
-    await delay(5000);
-    setLevel(Math.floor(Math.random() * 4) + 1);
-    setCurrentStep("done");
-  }
+  //   await delay(5000);
+  //   setLevel(Math.floor(Math.random() * 4) + 1);
+  //   setCurrentStep("done");
+  // }
 
   function handleUpgrade() {
     if (!upgradeId || !wallet || !userYeti?.data?.[0]?.data?.objectId) return;
