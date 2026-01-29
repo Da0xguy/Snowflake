@@ -65,15 +65,15 @@ const appRouter = router({
 
                 console.log(`Activity Score: ${totalPoints} (Tx: ${txCount}, Protocols: ${uniquePackages.size})`);
 
-                if (totalPoints < 30) {
-                     return {
-                        status: 'insufficient_points',
-                        score: totalPoints,
-                        txCount: txCount,
-                        protocolCount: uniquePackages.size,
-                        required: 30
-                     };
-                }
+                // if (totalPoints < 30) {
+                //      return {
+                //         status: 'insufficient_points',
+                //         score: totalPoints,
+                //         txCount: txCount,
+                //         protocolCount: uniquePackages.size,
+                //         required: 30
+                //      };
+                // }
 
                 // 2. Fetch User's Yeti to determine current level
                 const ownedObjects = await client.getOwnedObjects({

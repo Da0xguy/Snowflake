@@ -253,12 +253,15 @@ export default function Page() {
 
   /* ---------------- SHARE ---------------- */
   function shareNFT() {
-    if (!identity || !level) return;
-    const image = getYetiImage(identity, level);
+    const rawIdentity = identity || currentIdentity || "Explorer";
+    // Capitalize first letter to match keys just in case
+    const activeIdentity = rawIdentity.charAt(0).toUpperCase() + rawIdentity.slice(1);
+
+    const image = getYetiImage(activeIdentity as Identity, level || 1);
     if (navigator.share) {
       navigator.share({
         title: "My Yeti Identity",
-        text: `I unlocked a ${identity} Yeti (Level ${level}) 🧊`,
+        text: `I unlocked a ${activeIdentity} Yeti (Level ${level || 1}) 🧊`,
         url: window.location.origin + image,
       });
     } else {
@@ -310,10 +313,13 @@ export default function Page() {
   }
 
   function downloadNFT() {
-    if (!identity || !level) return;
+    const rawIdentity = identity || currentIdentity || "Explorer";
+    const activeIdentity = rawIdentity.charAt(0).toUpperCase() + rawIdentity.slice(1);
+
+    const image = getYetiImage(activeIdentity as Identity, level || 1);
     const link = document.createElement("a");
-    link.href = getYetiImage(identity, level);
-    link.download = "yeti-identity.png";
+    link.href = image;
+    link.download = `yeti-${activeIdentity.toLowerCase()}-level-${level || 1}.png`;
     link.click();
   }
 
@@ -390,7 +396,7 @@ export default function Page() {
           <div>
             <h2 className="text-3xl font-bold mb-6 animate-fadeInUp" style={{ animationDelay: "0.8s" }}>Why SnowFlake?</h2>
             <p className="text-blue-200 max-w-3xl animate-fadeInUp" style={{ animationDelay: "0.9s" }}>
-              Wallets don’t tell stories. Activity does. Yeti Identity turns
+              Wallets don’t tell stories. Activity does. Snowflake turns
               transactions, DeFi usage, and protocol interaction into a living
               NFT that represents who you are on-chain — not who you say you
               are.
@@ -617,18 +623,18 @@ export default function Page() {
 
       {/* ---------------- NFT RESULT ---------------- */}
       {/* ---------------- NFT RESULT ---------------- */}
-      {currentStep === "done" && (identity || currentIdentity) && level && (
+      {currentStep === "done" && (
         <section className="max-w-xl mx-auto px-8 py-24 text-center space-y-8 relative z-10">
           <img
-            src={getYetiImage((identity || currentIdentity) as Identity, level)}
+            src={getYetiImage(((identity || currentIdentity || "Explorer").charAt(0).toUpperCase() + (identity || currentIdentity || "Explorer").slice(1)) as Identity, level || 1)}
             className="w-72 mx-auto rounded-3xl shadow-2xl"
           />
 
           <h2 className="text-3xl font-bold">
-            {previousAction === "upgrade" ? "Upgrade Successful!" : `${identity || currentIdentity} Yeti Minted!`}
+            {previousAction === "upgrade" ? "Upgrade Successful!" : `${(identity || currentIdentity || "Explorer").charAt(0).toUpperCase() + (identity || currentIdentity || "Explorer").slice(1)} Yeti Minted!`}
           </h2>
           <p className="text-xl text-cyan-300 font-semibold">
-            Level {level} Unlocked
+            Level {level || 1} Unlocked
           </p>
 
           <p className="text-blue-200">
