@@ -46,17 +46,17 @@ type Step =
   | "done";
 
 /* ---------------- MOCK CONTRACT READ ---------------- */
-async function readUserProfileFromContract(
-  wallet: string,
-  identity: string
-) {
-  await new Promise((r) => setTimeout(r, 1200));
+// async function readUserProfileFromContract(
+//   wallet: string,
+//   identity: string
+// ) {
+//   await new Promise((r) => setTimeout(r, 1200));
 
-  return {
-    identity,
-    level: Math.floor(Math.random() * 4) + 1,
-  };
-}
+//   return {
+//     identity,
+//     level: Math.floor(Math.random() * 4) + 1,
+//   };
+// }
 
 /* ---------------- DELAY HELPER ---------------- */
 function delay(ms: number) {
@@ -637,25 +637,25 @@ function StepCard({ title, desc }: { title: string; desc: string }) {
   );
 }
 
-function ProgressItem({
-  text,
-  done,
-  active,
-}: {
-  text: string;
-  done?: boolean;
-  active?: boolean;
-}) {
-  return (
-    <div className="flex items-center gap-3 justify-center text-sm">
-      {done ? (
-        <CheckCircle className="text-green-400" size={18} />
-      ) : active ? (
-        <Loader2 className="animate-spin text-cyan-400" size={18} />
-      ) : (
-        <div className="w-4 h-4 rounded-full border border-white/30" />
-      )}
-      <span className={done ? "text-green-300" : "text-blue-200"}>{text}</span>
-    </div>
-  );
-}
+// function ProgressItem({
+//   text,
+//   done,
+//   active,
+// }: {
+//   text: string;
+//   done?: boolean;
+//   active?: boolean;
+// }) {
+//   return (
+//     <div className="flex items-center gap-3 justify-center text-sm">
+//       {done ? (
+//         <CheckCircle className="text-green-400" size={18} />
+//       ) : active ? (
+//         <Loader2 className="animate-spin text-cyan-400" size={18} />
+//       ) : (
+//         <div className="w-4 h-4 rounded-full border border-white/30" />
+//       )}
+//       <span className={done ? "text-green-300" : "text-blue-200"}>{text}</span>
+//     </div>
+//   );
+// }
