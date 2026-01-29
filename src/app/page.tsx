@@ -43,7 +43,8 @@ type Step =
   | "finalizing"
   | "upgrade-available"
   | "upgrading"
-  | "insufficient-points" // New step
+  | "insufficient-points"
+  | "error" // New step
   | "done";
 
 /* ---------------- MOCK CONTRACT READ ---------------- */
@@ -146,8 +147,7 @@ export default function Page() {
       },
       onError: (error) => {
         console.error("Mint failed:", error);
-        alert("Mint transaction failed. See console.");
-        setCurrentStep(null);
+        setCurrentStep("error");
       }
     });
   }
@@ -245,8 +245,7 @@ export default function Page() {
       },
       onError: (error) => {
         console.error("Upgrade failed:", error);
-        alert("Upgrade transaction failed. See console for details.");
-        setCurrentStep("done"); // Fallback or error state
+        setCurrentStep("error");
       }
     });
   }
@@ -485,7 +484,7 @@ export default function Page() {
         </section>
       )}
 
-      {currentStep && currentStep !== "done" && currentStep !== "upgrade-available" && currentStep !== "upgrading" && currentStep !== "minting" && currentStep !== "insufficient-points" && (
+      {currentStep && currentStep !== "done" && currentStep !== "upgrade-available" && currentStep !== "upgrading" && currentStep !== "minting" && currentStep !== "insufficient-points" && currentStep !== "error" && (
         <section className="max-w-xl mx-auto px-4 sm:px-8 py-24 relative z-10">
           <div className="relative rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl p-8 sm:p-10 space-y-8 animate-cardIn">
 
@@ -575,6 +574,20 @@ export default function Page() {
       )}
 
       {/* ---------------- UPGRADE PROMPT ---------------- */}
+
+      {/* ---------------- ERROR STATE ---------------- */}
+      {currentStep === "error" && (
+        <TransactionFailed
+          onRetry={() => {
+            if (upgradeId) {
+              handleUpgrade();
+            } else if (identity) {
+              handleMint(identity);
+            }
+          }}
+          onClose={() => setCurrentStep(null)}
+        />
+      )}
       {currentStep === "upgrade-available" && (
         <section className="max-w-xl mx-auto px-4 sm:px-8 py-24 relative z-10 text-center">
           <div className="relative rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl p-8 sm:p-10 space-y-8 animate-cardIn">
@@ -693,25 +706,37 @@ function StepCard({ title, desc, delay = 0 }: { title: string; desc: string; del
   );
 }
 
-// function ProgressItem({
-//   text,
-//   done,
-//   active,
-// }: {
-//   text: string;
-//   done?: boolean;
-//   active?: boolean;
-// }) {
-//   return (
-//     <div className="flex items-center gap-3 justify-center text-sm">
-//       {done ? (
-//         <CheckCircle className="text-green-400" size={18} />
-//       ) : active ? (
-//         <Loader2 className="animate-spin text-cyan-400" size={18} />
-//       ) : (
-//         <div className="w-4 h-4 rounded-full border border-white/30" />
-//       )}
-//       <span className={done ? "text-green-300" : "text-blue-200"}>{text}</span>
-//     </div>
-//   );
-// }
+function TransactionFailed({
+  onRetry,
+  onClose,
+}: {
+  onRetry: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <section className="max-w-xl mx-auto px-4 sm:px-8 py-24 relative z-10 text-center">
+      <div className="relative rounded-3xl bg-red-500/10 backdrop-blur-xl border border-red-500/30 shadow-2xl p-8 sm:p-10 space-y-6 animate-cardIn">
+        <h3 className="text-3xl font-bold text-red-400">Transaction Failed</h3>
+        <p className="text-blue-200">
+          Something went wrong while processing your transaction. Please check your
+          wallet and try again.
+        </p>
+
+        <div className="flex justify-center gap-4 pt-4">
+          <button
+            onClick={onRetry}
+            className="px-6 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 transition font-semibold"
+          >
+            Try Again
+          </button>
+          <button
+            onClick={onClose}
+            className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 transition font-semibold"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
