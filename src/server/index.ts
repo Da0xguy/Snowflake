@@ -15,17 +15,11 @@ const appRouter = router({
         .mutation(async (opts) => {
             const { input } = opts; // Restore input destructuring
 
-            if (!process.env.SUI_PRIVATE_KEY || !process.env.ADMIN_CAP_ID) {
-                console.warn("Missing SUI_PRIVATE_KEY or ADMIN_CAP_ID. Returning mock data.");
-                return { 
-                    status: 'success',
-                    level: 4, 
-                    id: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef' 
-                };
-            }
-
             try {
-                const { SUI_PRIVATE_KEY, ADMIN_CAP_ID } = process.env;
+                // Ensure variables are treated as strings
+                const SUI_PRIVATE_KEY = process.env.SUI_PRIVATE_KEY!;
+                const ADMIN_CAP_ID = process.env.ADMIN_CAP_ID!;
+                
                 // Use devnet as default
                 const client = new SuiClient({ url: getFullnodeUrl('devnet') });
 

@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+import './src/env.mjs';
+
 const nextConfig = {
   swcMinify: false,
   experimental: {
