@@ -353,7 +353,7 @@ export default function Page() {
                 Your On-Chain Identity,
                 <span className="text-cyan-400"> Earned</span>
               </h1>
-              <p className="text-blue-200 text-lg">
+              <p className="text-blue-200 text-lg animate-fadeInUp" style={{ animationDelay: "0.2s" }}>
                 Yeti Identity NFTs evolve based on what you actually do on-chain.
                 No quizzes. No forms. Just real activity.
               </p>
@@ -369,23 +369,25 @@ export default function Page() {
           <div>
             <h2 className="text-3xl font-bold mb-8">How It Works</h2>
             <div className="grid md:grid-cols-4 gap-6">
-              <StepCard title="Connect" desc="Link your wallet" />
-              <StepCard title="Stamp Identity" desc="Choose your path" />
+              <StepCard title="Connect" desc="Link your wallet" delay={0.3} />
+              <StepCard title="Stamp Identity" desc="Choose your path" delay={0.4} />
               <StepCard
                 title="Verify Activity"
                 desc="We read your on-chain behavior"
+                delay={0.5}
               />
               <StepCard
                 title="NFT Evolves"
                 desc="Your Yeti grows as you do"
+                delay={0.6}
               />
             </div>
           </div>
 
           {/* ABOUT */}
           <div>
-            <h2 className="text-3xl font-bold mb-6">Why SnowFlake?</h2>
-            <p className="text-blue-200 max-w-3xl">
+            <h2 className="text-3xl font-bold mb-6 animate-fadeInUp" style={{ animationDelay: "0.8s" }}>Why SnowFlake?</h2>
+            <p className="text-blue-200 max-w-3xl animate-fadeInUp" style={{ animationDelay: "0.9s" }}>
               Wallets don’t tell stories. Activity does. Yeti Identity turns
               transactions, DeFi usage, and protocol interaction into a living
               NFT that represents who you are on-chain — not who you say you
@@ -628,9 +630,12 @@ export default function Page() {
 }
 
 /* ---------------- SMALL COMPONENTS ---------------- */
-function StepCard({ title, desc }: { title: string; desc: string }) {
+function StepCard({ title, desc, delay = 0 }: { title: string; desc: string; delay?: number }) {
   return (
-    <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
+    <div
+      className="p-6 rounded-2xl bg-white/5 border border-white/10 opacity-0 animate-fadeInUp"
+      style={{ animationDelay: `${delay}s` }}
+    >
       <div className="font-bold mb-2">{title}</div>
       <div className="text-blue-300 text-sm">{desc}</div>
     </div>
